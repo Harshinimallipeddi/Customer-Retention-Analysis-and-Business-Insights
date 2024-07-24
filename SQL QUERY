@@ -1,0 +1,83 @@
+### SQL QUERY:
+
+create database truemed;
+
+USE truemed;
+
+CREATE TABLE cx_details (
+    CustomerID INT PRIMARY KEY,
+    Age INT,
+    AgeGroupID INT,
+    CreatedByID INT,
+    CreatedOn DATE,
+    CustomerName VARCHAR(100),
+    EmailAddress VARCHAR(100),
+    Gender CHAR(1),
+    IsVerified BOOLEAN
+);
+
+CREATE TABLE OrderDetails (
+    OrderID INT PRIMARY KEY,
+    Active BOOLEAN,
+    AddressID INT,
+    CreatedOn DATETIME,
+    CustomerID INT,
+    MakerModifiedByID INT,
+    ModifiedOn DATETIME,
+    OrderValue DECIMAL(10, 2),
+    SavingValue DECIMAL(10, 2),
+    OrderStatus VARCHAR(50),
+    OrderType VARCHAR(50),
+    Status VARCHAR(50),
+    PaymentStatus VARCHAR(50),
+    PaymentType VARCHAR(50),
+    DeliveryCharge DECIMAL(10, 2),
+    IsReversed BOOLEAN,
+    OrganisationID INT,
+    DiscountApplied DECIMAL(10, 2),
+    OfferID INT,
+    DeliveryDate DATETIME,
+    FOREIGN KEY (CustomerID) REFERENCES cx_details(CustomerID)
+);
+CREATE TABLE OrderStatus (
+    OrderStatusTrackingID INT PRIMARY KEY,
+    ModifiedByID INT,
+    ModifiedOn DATETIME,
+    OrderID INT,
+    OrderStatusID INT,
+    FOREIGN KEY (OrderID) REFERENCES OrderDetails(OrderID)
+);
+
+WITH Orders AS (
+    SELECT 
+        CustomerID,
+        YEAR(CreatedOn) AS Yr,
+        QUARTER(CreatedOn) AS Qtr
+    FROM OrderDetails
+    WHERE OrderStatus = '55' 
+    GROUP BY CustomerID, YEAR(CreatedOn), QUARTER(CreatedOn)
+),
+
+Retention AS (
+    SELECT 
+        o1.CustomerID,
+        o1.Yr AS JoinYr,
+        o1.Qtr AS JoinQtr,
+        o2.Yr AS RetainYr,
+        o2.Qtr AS RetainQtr
+    FROM Orders o1
+    JOIN Orders o2 
+        ON o1.CustomerID = o2.CustomerID 
+        AND (o2.Yr > o1.Yr OR (o2.Yr = o1.Yr AND o2.Qtr > o1.Qtr))
+    WHERE o1.Yr = YEAR(CURDATE()) - 1 
+)
+
+SELECT 
+    JoinYr,
+    JoinQtr,
+    RetainYr,
+    RetainQtr,
+    COUNT(DISTINCT CustomerID) AS RetainedCust
+FROM Retention
+GROUP BY JoinYr, JoinQtr, RetainYr, RetainQtr
+ORDER BY JoinYr, JoinQtr, RetainYr, RetainQtr;
