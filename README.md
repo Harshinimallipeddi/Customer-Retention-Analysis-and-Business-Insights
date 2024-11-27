@@ -1,4 +1,4 @@
-# Customer Retention and Business Analysis for Truemeds
+# Customer Retention and Business Analysis 
 This repository contains SQL queries and business analysis conducted for Truemeds, focusing on customer retention rates and revenue generation through various marketing channels. The project includes SQL data extraction, data cleaning, and visualization, along with detailed insights and recommendations.
 
 #### Table of Contents
